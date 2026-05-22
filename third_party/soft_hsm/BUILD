@@ -23,7 +23,7 @@ cmake(
     cache_entries = {
         "BUILD_TESTS": "OFF",  # Disable test suite compilation
         "WITH_CRYPTO_BACKEND": "openssl",  # Use OpenSSL as crypto backend (matches openssl_shared dependency)
-        "OPENSSL_ROOT_DIR": "$${EXT_BUILD_DEPS}",  # Root path for OpenSSL headers/libs provided by Bazel deps
+        "OPENSSL_ROOT_DIR": "$$EXT_BUILD_DEPS$$",  # Root path for OpenSSL headers/libs provided by Bazel deps
         "ENABLE_GOST": "OFF",  # Disable GOST (not in SCORE requirements)
         "ENABLE_EDDSA": "OFF",  # Disable EdDSA/Ed25519/Ed448 (not in SCORE requirements)
         "ENABLE_ECC": "ON",  # Enable ECC for ECDSA/ECDH (feat_req__sec_crypt__sig_algo_ecdsa, feat_req__sec_crypt__asym_algo_ecdh)
@@ -33,6 +33,10 @@ cmake(
         "CMAKE_INSTALL_LIBDIR": "lib",
         "CMAKE_INSTALL_SYSCONFDIR": "etc",
         "CMAKE_INSTALL_LOCALSTATEDIR": "var",
+        # QNX <time.h> is not transitively included the same way as glibc;
+        # force-include it so SoftHSM sources that use time()/gmtime()/strftime() compile.
+        "CMAKE_CXX_FLAGS": "-include time.h -Wno-error=unused-parameter",
+        "CMAKE_C_FLAGS": "-include time.h -Wno-error=unused-parameter",
         # SoftHSM 2.7.0 uses try_run() to verify OpenSSL feature support.
         # try_run() cannot execute cross-compiled binaries on the build host;
         # cmake sets results to FAILED_TO_RUN in cross-compilation mode.
@@ -55,12 +59,20 @@ cmake(
         "//platforms:is_qnx_aarch64": {
             # EXT_BUILD_ROOT is captured at the start of the build script (before any cd),
             # so it reliably points to the execroot regardless of working directory changes.
-            "QNX_HOST": "$${EXT_BUILD_ROOT}/external/score_bazel_cpp_toolchains++gcc+score_qcc_aarch64_toolchain_pkg/host/linux/x86_64",
-            "QNX_TARGET": "$${EXT_BUILD_ROOT}/external/score_bazel_cpp_toolchains++gcc+score_qcc_aarch64_toolchain_pkg/target/qnx",
+            "QNX_HOST": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/host/linux/x86_64",
+            "QNX_TARGET": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/target/qnx7",
+            "QNX_SDP_WRAP": "$$EXT_BUILD_ROOT$$/third_party/ipnext_qnx/sdp/7.1.0/wrappers/tool_wrap.sh",
+            "QNX_SDP_BIN_DIR": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/host/linux/x86_64/usr/bin",
+            "QNX_SDP_ENV_SH": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/qnxsdp-env.sh",
+            "QNX_SHARED_LICENSE_FILE": "$$EXT_BUILD_ROOT$$/third_party/ipnext_qnx/sdp/7.1.0/wrappers/licenses",
         },
         "//platforms:is_qnx_x86_64": {
-            "QNX_HOST": "$${EXT_BUILD_ROOT}/external/score_bazel_cpp_toolchains++gcc+score_qcc_x86_64_toolchain_pkg/host/linux/x86_64",
-            "QNX_TARGET": "$${EXT_BUILD_ROOT}/external/score_bazel_cpp_toolchains++gcc+score_qcc_x86_64_toolchain_pkg/target/qnx",
+            "QNX_HOST": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/host/linux/x86_64",
+            "QNX_TARGET": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/target/qnx7",
+            "QNX_SDP_WRAP": "$$EXT_BUILD_ROOT$$/third_party/ipnext_qnx/sdp/7.1.0/wrappers/tool_wrap.sh",
+            "QNX_SDP_BIN_DIR": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/host/linux/x86_64/usr/bin",
+            "QNX_SDP_ENV_SH": "$$EXT_BUILD_ROOT$$/external/ipnext_qnx_sdp/qnxsdp-env.sh",
+            "QNX_SHARED_LICENSE_FILE": "$$EXT_BUILD_ROOT$$/third_party/ipnext_qnx/sdp/7.1.0/wrappers/licenses",
         },
         "//conditions:default": {},
     }),
