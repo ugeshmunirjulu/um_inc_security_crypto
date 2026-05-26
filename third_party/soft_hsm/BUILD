@@ -10,7 +10,7 @@
 #  of a patent, utility model or design.
 # =============================================================================
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
 
 # SoftHSM build using rules_foreign_cc cmake
@@ -103,11 +103,31 @@ genrule(
     visibility = ["//visibility:private"],
 )
 
-# soft_hsm_cmake only produces a shared library; cc_shared_library not required.
+# libsofthsm2.so's headers (PKCS#11 interface)
+# Matches pattern from //third_party/ipnext_qnx/bsp_extensions/pkcs_11:pkcs11_provider_headers
 cc_library(
-    name = "libsofthsm_shared",
+    name = "softhsm_headers",
     hdrs = [":extract_pkcs11_headers"],
     includes = ["include"],
     visibility = ["//visibility:public"],
-    deps = [":soft_hsm_cmake"],
+)
+
+# Extract the single .so from the cmake output for cc_import
+genrule(
+    name = "softhsm_so",
+    srcs = [":soft_hsm_cmake"],
+    outs = ["libsofthsm2.so"],
+    cmd = "cp $$(echo $(SRCS) | tr ' ' '\\n' | grep 'libsofthsm2\\.so$$') $@",
+    visibility = ["//visibility:public"],
+)
+
+# cc_import wrapping the cmake-built libsofthsm2.so for transitive use.
+# Matches pattern from //third_party/ipnext_qnx/bsp_extensions/pkcs_11:pkcs11_provider_transitive
+cc_import(
+    name = "libsofthsm_shared",
+    shared_library = ":softhsm_so",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":softhsm_headers",
+    ],
 )

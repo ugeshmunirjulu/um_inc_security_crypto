@@ -13,7 +13,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
-    name = "crypto_daemon",
+    name = "score_crypto_daemon",
     srcs = ["src/daemon.cpp"],
     copts = select({
         "//conditions:default": [],
@@ -23,10 +23,6 @@ cc_binary(
             "-O1",
         ],
     }),
-    dynamic_deps = [
-        "//third_party/openssl:openssl_shared",
-        "//third_party/grpc:libgrpc_shared",
-    ],
     includes = ["IPC"],
     linkopts = select({
         "//conditions:default": [],
@@ -46,6 +42,8 @@ cc_binary(
         "//score/crypto/daemon/provider/score_provider:score_provider_factory",
         "//score/crypto/ipc:ipc_config",
         "//score/crypto/ipc/grpc_adapter:grpc_control_server",
+        "//third_party/openssl",
+        "@grpc//:grpc++_unsecure",
     ],
 )
 
